@@ -1,0 +1,107 @@
+// NBB NBO Platform — Prisma Schema
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  RM
+  ANALYST
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique
+  name           String
+  role           Role      @default(RM)
+  hashedPassword String
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  lastLogin      DateTime?
+
+  @@map("users")
+}
+
+// ─── Clients ──────────────────────────────────────────────────────────────────
+
+model Client {
+  id                    String   @id          // e.g. NBB-CORP-0001
+  name                  String
+  industrySector        String?
+  annualRevenueBhd      Float?
+  yearsWithNbb          Float?
+  existingProducts      String?              // comma-separated product names
+  lastTransactionDate   String?
+  avgMonthlyBalanceBhd  Float?
+  fxVolumeBhd           Float?
+  tradeFinanceUsage     String?              // "yes" | "no"
+  loanOutstandingBhd    Float?
+  relationshipManager   String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  predictions Prediction[]
+
+  @@map("clients")
+}
+
+// ─── Predictions ──────────────────────────────────────────────────────────────
+
+model Prediction {
+  id                  Int      @id @default(autoincrement())
+  clientId            String
+  modelVersion        String?
+  recommendedProduct  String
+  confidenceScore     Float
+  alternativeOffer1   String?
+  alt1Confidence      Float?
+  alternativeOffer2   String?
+  alt2Confidence      Float?
+  accepted            Boolean?             // null = no feedback yet
+  scoredAt            DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+  @@index([scoredAt])
+  @@map("predictions")
+}
+
+// ─── Model Registry ───────────────────────────────────────────────────────────
+
+model ModelVersion {
+  id              Int      @id @default(autoincrement())
+  version         String   @unique
+  trainedAt       DateTime @default(now())
+  accuracy        Float?
+  f1Macro         Float?
+  precisionMacro  Float?
+  recallMacro     Float?
+  nSamples        Int?
+  metricsJson     Json?
+  isActive        Boolean  @default(false)
+  notes           String?
+
+  @@map("model_versions")
+}
+
+// ─── Products ─────────────────────────────────────────────────────────────────
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  isEnabled   Boolean  @default(true)
+  category    String?
+  description String?
+
+  @@map("products")
+}

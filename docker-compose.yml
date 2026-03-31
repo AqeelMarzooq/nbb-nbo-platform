@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: nbb_nbo_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nbb_user
+      POSTGRES_PASSWORD: nbb_pass
+      POSTGRES_DB: nbb_nbo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nbb_user -d nbb_nbo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nbb_nbo_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://nbb_user:nbb_pass@db:5432/nbb_nbo
+      MODEL_DIR: /app/models
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8000:8000"
+    volumes:
+      - model_data:/app/models
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ── Next.js Frontend ────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nbb_nbo_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: nbb-nbo-change-this-in-production-min32chars
+      DATABASE_URL: postgresql://nbb_user:nbb_pass@db:5432/nbb_nbo
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  model_data:

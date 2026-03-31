@@ -1,0 +1,25 @@
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/nbb_nbo_dev.db
+backend/models/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+
+# OS
+.DS_Store
+*.DS_Store
+
+# Logs
+*.log
+/tmp/
+
+# Secrets
+.env
+.env.local
+.env.*.local
