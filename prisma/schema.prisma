@@ -24,10 +24,10 @@ model User {
   email          String    @unique
   name           String
   role           Role      @default(RM)
-  hashedPassword String
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  lastLogin      DateTime?
+  hashedPassword String    @map("hashed_password")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  lastLogin      DateTime? @map("last_login")
 
   @@map("users")
 }
@@ -37,18 +37,18 @@ model User {
 model Client {
   id                    String   @id          // e.g. NBB-CORP-0001
   name                  String
-  industrySector        String?
-  annualRevenueBhd      Float?
-  yearsWithNbb          Float?
-  existingProducts      String?              // comma-separated product names
-  lastTransactionDate   String?
-  avgMonthlyBalanceBhd  Float?
-  fxVolumeBhd           Float?
-  tradeFinanceUsage     String?              // "yes" | "no"
-  loanOutstandingBhd    Float?
-  relationshipManager   String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  industrySector        String?  @map("industry_sector")
+  annualRevenueBhd      Float?   @map("annual_revenue_bhd")
+  yearsWithNbb          Float?   @map("years_with_nbb")
+  existingProducts      String?  @map("existing_products")  // comma-separated product names
+  lastTransactionDate   String?  @map("last_transaction_date")
+  avgMonthlyBalanceBhd  Float?   @map("avg_monthly_balance_bhd")
+  fxVolumeBhd           Float?   @map("fx_volume_bhd")
+  tradeFinanceUsage     String?  @map("trade_finance_usage")  // "yes" | "no"
+  loanOutstandingBhd    Float?   @map("loan_outstanding_bhd")
+  relationshipManager   String?  @map("relationship_manager")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
   predictions Prediction[]
 
@@ -59,16 +59,16 @@ model Client {
 
 model Prediction {
   id                  Int      @id @default(autoincrement())
-  clientId            String
-  modelVersion        String?
-  recommendedProduct  String
-  confidenceScore     Float
-  alternativeOffer1   String?
-  alt1Confidence      Float?
-  alternativeOffer2   String?
-  alt2Confidence      Float?
+  clientId            String   @map("client_id")
+  modelVersion        String?  @map("model_version")
+  recommendedProduct  String   @map("recommended_product")
+  confidenceScore     Float    @map("confidence_score")
+  alternativeOffer1   String?  @map("alternative_offer_1")
+  alt1Confidence      Float?   @map("alt1_confidence")
+  alternativeOffer2   String?  @map("alternative_offer_2")
+  alt2Confidence      Float?   @map("alt2_confidence")
   accepted            Boolean?             // null = no feedback yet
-  scoredAt            DateTime @default(now())
+  scoredAt            DateTime @default(now()) @map("scored_at")
 
   client Client @relation(fields: [clientId], references: [id])
 
@@ -82,14 +82,14 @@ model Prediction {
 model ModelVersion {
   id              Int      @id @default(autoincrement())
   version         String   @unique
-  trainedAt       DateTime @default(now())
+  trainedAt       DateTime @default(now()) @map("trained_at")
   accuracy        Float?
-  f1Macro         Float?
-  precisionMacro  Float?
-  recallMacro     Float?
-  nSamples        Int?
-  metricsJson     Json?
-  isActive        Boolean  @default(false)
+  f1Macro         Float?   @map("f1_macro")
+  precisionMacro  Float?   @map("precision_macro")
+  recallMacro     Float?   @map("recall_macro")
+  nSamples        Int?     @map("n_samples")
+  metricsJson     Json?    @map("metrics_json")
+  isActive        Boolean  @default(false) @map("is_active")
   notes           String?
 
   @@map("model_versions")
@@ -100,7 +100,7 @@ model ModelVersion {
 model Product {
   id          Int      @id @default(autoincrement())
   name        String   @unique
-  isEnabled   Boolean  @default(true)
+  isEnabled   Boolean  @default(true) @map("is_enabled")
   category    String?
   description String?
 
