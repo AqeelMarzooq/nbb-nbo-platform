@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, Integer
+from sqlalchemy import func, Integer, cast, Date
 
 from db.database import get_db, DATABASE_URL
 from db.models import Prediction, Client, ModelVersion
@@ -35,11 +35,11 @@ def get_summary(db: Session = Depends(get_db)) -> Any:
     last_retrain = active_mv.trained_at.strftime("%Y-%m-%d %H:%M") if active_mv else "Never"
 
     # Top product today
-    today = datetime.utcnow().date().isoformat()
-    date_expr = func.strftime("%Y-%m-%d", Prediction.scored_at) if _IS_SQLITE else func.cast(Prediction.scored_at, func.date)
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow_start = today_start + timedelta(days=1)
     today_preds = (
         db.query(Prediction.recommended_product, func.count(Prediction.id).label("cnt"))
-        .filter(func.strftime("%Y-%m-%d", Prediction.scored_at) == today)
+        .filter(Prediction.scored_at >= today_start, Prediction.scored_at < tomorrow_start)
         .group_by(Prediction.recommended_product)
         .order_by(func.count(Prediction.id).desc())
         .first()
